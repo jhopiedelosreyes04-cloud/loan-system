@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JENPIE DELOS REYES PERSONAL LOAN SYSTEM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body{margin:0;font-family:'Inter',sans-serif;background:linear-gradient(135deg,#e0eafc,#cfdef3);color:#333;}
+        h2,h3{margin-top:10px;}
+        h3.centered{text-align:center;color:#1a3e72;font-weight:600;margin:25px 0 10px;}
+        button{cursor:pointer;border-radius:6px;padding:8px 12px;border:none;font-weight:600;transition:0.3s;}
+        button:hover{opacity:0.9;}
+        #loginBox{display:flex;flex-direction:column;justify-content:center;align-items:center;height:100vh;text-align:center;padding:30px;background:#fff;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,0.15);max-width:400px;margin:auto;}
+        #loginBox h3{font-size:24px;color:#1a3e72;font-weight:700;margin-bottom:25px;}
+        #loginBox input{width:80%;padding:12px;margin-bottom:20px;border-radius:8px;border:1px solid #ccc;font-size:16px;}
+        #loginBox button{width:80%;padding:12px;font-weight:600;font-size:16px;color:#fff;background-color:#1a3e72;border:none;border-radius:8px;}
+        #loginBox button:hover{background-color:#14325a;}
+        #app{max-width:1200px;margin:30px auto;padding:20px;background:#fff;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,0.08);}
+        #totalsGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:15px;margin-bottom:30px;}
+        .total-box{background:#f8f9fa;padding:15px;border-radius:10px;text-align:center;box-shadow:0 4px 10px rgba(0,0,0,0.05);}
+        .total-box h4{margin:0 0 5px;color:#1a3e72;}
+        .total-box p{font-size:20px;font-weight:700;color:#28a745;margin:0;}
+        #btnAddCapital{background-color:#28a745;color:#fff;margin-right:10px;}
+        #btnResetSystem{background-color:#dc3545;color:#fff;}
+        #loanForm{display:grid;grid-template-columns:150px 1fr;gap:12px;align-items:center;margin-bottom:30px;}
+        #loanForm input, #loanForm select{padding:8px;border-radius:6px;border:1px solid #ccc;font-size:14px;width:100%;box-sizing:border-box;min-width:80px;max-width:100%;flex:1;}
+        #loanForm button{grid-column:2/3;width:160px;background-color:#1a3e72;color:#fff;margin-top:10px;}
+        @media(max-width:768px){#loanForm{grid-template-columns:1fr;gap:8px;} #loanForm button{width:100%;}}
+        #loanList{display:grid;grid-template-columns:1fr;gap:20px;max-height:400px;overflow-y:auto;padding-right:5px;}
+        @media(min-width:800px){#loanList{grid-template-columns:repeat(3,1fr);}}
+        .loan{border-radius:12px;padding:15px;background:#fdfdfd;box-shadow:0 4px 15px rgba(0,0,0,0.08);display:flex;flex-direction:column;transition:0.3s;position:relative;border:1px solid #eee;}
+        .loan:hover{box-shadow:0 6px 25px rgba(0,0,0,0.2);transform:translateY(-3px);}
+        .loan h4{margin:0 0 10px 0;color:#1a3e72;}
+        .loan-buttons{display:flex;justify-content:space-between;flex-wrap:wrap;gap:5px;margin-top:10px;}
+        .penalty{color:red;font-weight:700;}
+        table{width:100%;border-collapse:collapse;margin-top:10px;}
+        table,th,td{border:1px solid #ccc;padding:8px;text-align:center;}
+        th{background-color:#1a3e72;color:#fff;}
+        tr:nth-child(even){background-color:#f2f2f2;}
+        .chart-container{max-width:800px;margin:30px auto;}
+        .toast{position:fixed;bottom:30px;right:30px;background:#1a3e72;color:#fff;padding:12px 20px;border-radius:8px;box-shadow:0 4px 10px rgba(0,0,0,0.3);z-index:1000;}
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div id="loginBox">
+    <h3>JENPIE DELOS REYES PERSONAL LOAN SYSTEM</h3>
+    <input type="password" id="pin" placeholder="Enter PIN" />
+    <button id="loginBtn">Login</button>
+</div>
+
+<div id="app" class="hidden">
+    <h2>Personal Lending System <span id="syncStatus" style="font-size: 12px; color: #666;">(Cloud Synced)</span></h2>
+
+    <div id="totalsGrid">
+        <div class="total-box">
+            <h4>Total Money (Capital + Interest)</h4>
+            <p>₱<span id="totalFunds">0.00</span></p>
+        </div>
+        <div class="total-box">
+            <h4>Bank Balance</h4>
+            <p>₱<span id="bankBalance">0.00</span></p>
+        </div>
+        <div class="total-box">
+            <h4>Total Interest Earned</h4>
+            <p>₱<span id="totalInterestEarned">0.00</span></p>
+        </div>
+        <div class="total-box">
+            <h4>Total Remaining Balance</h4>
+            <p>₱<span id="totalRemaining">0.00</span></p>
+        </div>
+    </div>
+
+    <button id="btnAddCapital"><i class="fa-solid fa-wallet"></i> Add Capital</button>
+    <button id="btnResetSystem" style="background-color:#dc3545; color:white;"><i class="fa-solid fa-trash"></i> Reset System</button>
+
+    <h3 class="centered">Add Loan</h3>
+    <div id="loanForm">
+        <label>Borrower Name:</label>
+        <input list="borrowersList" id="name" placeholder="Borrower Name" />
+        <datalist id="borrowersList"></datalist>
+
+        <label>Loan Amount:</label>
+        <input type="number" id="loanAmount" placeholder="₱0.00" />
+
+        <label>Interest:</label>
+        <select id="interest">
+            <option value="0">0%</option>
+            <option value="0.05">5%</option>
+            <option value="0.06">6%</option>
+            <option value="0.07">7%</option>
+            <option value="0.08">8%</option>
+            <option value="0.09">9%</option>
+            <option value="0.10">10%</option>
+        </select>
+
+        <label id="manualInterestLabel" style="display:none;">Manual Interest (₱)</label>
+        <input type="number" id="manualInterest" placeholder="₱0.00" style="display:none;" />
+
+        <label id="loanTermLabel">Loan Term (months):</label>
+        <input type="number" id="months" placeholder="6" />
+
+        <label>Grace Days:</label>
+        <input type="number" id="graceDays" placeholder="Optional" />
+
+        <label>Payment Type:</label>
+        <select id="paymentType">
+            <option value="monthly">Monthly</option>
+            <option value="cutoff10">Per Cutoff (10th & 25th)</option>
+            <option value="cutoff15">Per Cutoff (15th & 30th)</option>
+        </select>
+
+        <div></div>
+        <button onclick="addLoan()"><i class="fa-solid fa-plus"></i> Add Loan</button>
+    </div>
+
+    <h3 class="centered">Active Loans</h3>
+    <div id="loanList" class="loanList"></div>
+
+    <h3 class="centered">Completed Loans</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Principal</th>
+                <th>Interest</th>
+                <th>Completed Date</th>
+            </tr>
+        </thead>
+        <tbody id="completedLoanTable"></tbody>
+    </table>
+
+    <h3 class="centered">Monthly Interest Income</h3>
+    <table id="incomeTable">
+        <thead><tr><th>Month</th><th>Total Interest</th></tr></thead>
+        <tbody></tbody>
+    </table>
+
+    <h3 class="centered">Dashboard Charts</h3>
+    <div class="chart-container">
+        <canvas id="loanChart"></canvas>
+    </div>
+
+    <button onclick="exportCSV()" style="background:#1a3e72;color:#fff;margin-top:20px;"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
+</div>
+
+<script>
+    // YOUR UNIQUE CLOUD URL
+    const SHEET_URL = "https://script.google.com/macros/s/AKfycbzdRPOc9KS4cCkb8qMLlNGi5GABVNo8fXZZlFzE5Ikq5b8qDXmolOE-Gyymznm55fa64A/exec"; 
+    const ADMIN_PIN = "071117";
+
+    let loans = [], completedLoans = [], banks = { Cash: 0 }, borrowers = [], historicalInterest = {}; 
+
+    const loginBox = document.getElementById("loginBox");
+    const loginBtn = document.getElementById("loginBtn");
+    const pinInput = document.getElementById("pin");
+    const app = document.getElementById("app");
+    const loanList = document.getElementById("loanList");
+    const totalFundsSpan = document.getElementById("totalFunds");
+    const bankBalanceSpan = document.getElementById("bankBalance");
+    const totalInterestSpan = document.getElementById("totalInterestEarned");
+    const totalRemainingSpan = document.getElementById("totalRemaining");
+
+    function formatMoney(num) { return Number(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+    function showToast(msg) { const t = document.createElement("div"); t.className = "toast"; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 3000); }
+
+    // CLOUD SAVE FUNCTION
+    async function save() {
+        const dataToSave = {
+            loans,
+            completedLoans,
+            banks,
+            historicalInterest
+        };
+
+        document.getElementById("syncStatus").innerText = "Saving to Cloud...";
+
+        try {
+            await fetch(SHEET_URL, {
+                method: "POST",
+                mode: "no-cors", 
+                body: JSON.stringify(dataToSave)
+            });
+            document.getElementById("syncStatus").innerText = "(Cloud Synced)";
+        } catch (e) {
+            console.error("Cloud Save Failed", e);
+            document.getElementById("syncStatus").innerText = "(Sync Error)";
+        }
+    }
+
+    // CLOUD LOAD FUNCTION
+    async function load() {
+        document.getElementById("syncStatus").innerText = "Loading Cloud Data...";
+        try {
+            const response = await fetch(SHEET_URL);
+            const data = await response.json();
+            
+            if (data) {
+                loans = data.loans || [];
+                completedLoans = data.completedLoans || [];
+                banks = data.banks || { Cash: 0 };
+                historicalInterest = data.historicalInterest || {};
+                render();
+            }
+            document.getElementById("syncStatus").innerText = "(Cloud Synced)";
+        } catch (e) {
+            console.warn("Load failed", e);
+            document.getElementById("syncStatus").innerText = "(Sync Error)";
+        }
+    }
+
+    loginBtn.addEventListener("click", () => {
+        if (pinInput.value === ADMIN_PIN) { 
+            loginBox.style.display = "none"; 
+            app.classList.remove("hidden"); 
+            load(); 
+        } 
+        else alert("Wrong PIN");
+    });
+
+    document.getElementById("btnAddCapital").addEventListener("click", () => {
+        const amt = parseFloat(prompt("Enter amount to add:"));
+        if (isNaN(amt) || amt <= 0) return;
+        banks.Cash += amt; save(); render();
+    });
+
+    document.getElementById("btnResetSystem").addEventListener("click", () => {
+        if (prompt("Enter PIN to reset:") === ADMIN_PIN && confirm("Reset all data?")) {
+            loans = []; completedLoans = []; banks = { Cash: 0 }; historicalInterest = {};
+            save(); render();
+        }
+    });
+
+    document.getElementById("interest").addEventListener("change", (e) => {
+        const manual = e.target.value === "0";
+        document.getElementById("manualInterestLabel").style.display = manual ? "block" : "none";
+        document.getElementById("manualInterest").style.display = manual ? "block" : "none";
+        document.getElementById("loanTermLabel").style.display = manual ? "none" : "block";
+        document.getElementById("months").style.display = manual ? "none" : "block";
+    });
+
+    function addLoan() {
+        const nameInput = document.getElementById("name");
+        const amtInput = document.getElementById("loanAmount");
+        const rateInput = document.getElementById("interest");
+        const termInput = document.getElementById("months");
+        const manualIntInput = document.getElementById("manualInterest");
+
+        const name = nameInput.value;
+        const amt = +amtInput.value;
+        const rate = +rateInput.value;
+        const term = +termInput.value || 0;
+
+        if (!name || amt <= 0) return alert("Invalid inputs");
+        if (amt > banks.Cash) return alert("Insufficient Bank Funds!");
+
+        let totalInt = rate === 0 ? +manualIntInput.value : (amt * rate * term);
+
+        banks.Cash -= amt;
+        loans.push({
+            id: Date.now(), name, principal: amt, totalInterest: totalInt,
+            originalPrincipal: amt, originalInterest: totalInt,
+            paid: 0, term: term, penaltyInterest: 0,
+            paymentType: document.getElementById("paymentType").value,
+            manual: rate === 0, paymentDates: []
+        });
+
+        nameInput.value = ""; amtInput.value = ""; termInput.value = ""; manualIntInput.value = "";
+        save(); render(); showToast("Loan added!");
+    }
+
+    function payRegular(id) {
+        const l = loans.find(x => x.id === id); if (!l) return;
+        const monthKey = `${new Date().getFullYear()}-${new Date().getMonth()+1}`;
+
+        if (l.manual) {
+            const pPay = +prompt("Principal Payment:", l.principal);
+            const iPay = +prompt("Interest Payment:", 0);
+            l.principal -= pPay; l.totalInterest -= iPay;
+            banks.Cash += (pPay + iPay);
+            historicalInterest[monthKey] = (historicalInterest[monthKey] || 0) + iPay;
+        } else {
+            const pPerPay = l.originalPrincipal / (l.paymentType === "monthly" ? l.term : l.term * 2);
+            const iPerPay = l.originalInterest / (l.paymentType === "monthly" ? l.term : l.term * 2);
+            l.principal -= pPerPay; l.totalInterest -= iPerPay;
+            banks.Cash += (pPerPay + iPerPay);
+            historicalInterest[monthKey] = (historicalInterest[monthKey] || 0) + iPerPay;
+        }
+        
+        if (l.principal <= 0.1 && l.totalInterest <= 0.1) {
+            l.completedDate = new Date().toLocaleDateString();
+            completedLoans.push(l);
+            loans = loans.filter(x => x.id !== id);
+        }
+        save(); render();
+    }
+
+    function render() {
+        loanList.innerHTML = "";
+        let rem = loans.reduce((s, l) => s + l.principal + l.totalInterest + l.penaltyInterest, 0);
+        bankBalanceSpan.innerText = formatMoney(banks.Cash);
+        totalRemainingSpan.innerText = formatMoney(rem);
+        totalFundsSpan.innerText = formatMoney(banks.Cash + rem);
+        totalInterestSpan.innerText = formatMoney(Object.values(historicalInterest).reduce((a,b)=>a+b, 0));
+
+        loans.forEach(l => {
+            const card = document.createElement("div"); card.className = "loan";
+            card.innerHTML = `<h4>${l.name}</h4>Rem. Principal: ₱${formatMoney(l.principal)}<br>Rem. Interest: ₱${formatMoney(l.totalInterest)}<br>Penalty: <span class="penalty">₱${formatMoney(l.penaltyInterest)}</span><div class="loan-buttons"><button onclick="payRegular(${l.id})" style="background:#28a745; color:white">Pay</button><button onclick="const p=prompt('Penalty:'); if(p){loans.find(x=>x.id==${l.id}).penaltyInterest+=+p; save(); render();}" style="background:#6c757d; color:white">Penalty</button></div>`;
+            loanList.appendChild(card);
+        });
+
+        document.getElementById("completedLoanTable").innerHTML = completedLoans.map(l => `<tr><td>${l.name}</td><td>₱${formatMoney(l.originalPrincipal)}</td><td>₱${formatMoney(l.originalInterest)}</td><td>${l.completedDate}</td></tr>`).join("");
+        document.querySelector("#incomeTable tbody").innerHTML = Object.keys(historicalInterest).sort().map(k => `<tr><td>${k}</td><td>₱${formatMoney(historicalInterest[k])}</td></tr>`).join("");
+        updateChart();
+    }
+
+    function updateChart() {
+        const ctx = document.getElementById("loanChart").getContext("2d");
+        if (window.myChart) window.myChart.destroy();
+        window.myChart = new Chart(ctx, { type: 'bar', data: { labels: loans.map(l=>l.name), datasets: [{ label: 'Balance', data: loans.map(l=>l.principal+l.totalInterest), backgroundColor: '#1a3e72' }] } });
+    }
+
+    function exportCSV() {
+        let csv = "Name,Principal,Interest,Status\n";
+        loans.forEach(l => csv += `${l.name},${l.principal},${l.totalInterest},Active\n`);
+        completedLoans.forEach(l => csv += `${l.name},${l.originalPrincipal},${l.originalInterest},Completed\n`);
+        const url = window.URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+        const a = document.createElement('a'); a.setAttribute('href', url); a.setAttribute('download', 'loans.csv'); a.click();
+    }
+</script>
+</body>
+</html>
