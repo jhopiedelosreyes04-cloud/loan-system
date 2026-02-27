@@ -151,7 +151,8 @@
         <label>Loan Amount:</label><input id="loanAmount" type="number" placeholder="₱" />
         <label>Interest Rate:</label>
         <select id="interest" onchange="toggleManualInterest()">
-            <option value="0.05">5%</option>
+            <option value="0.04">4%</option>
+	    <option value="0.05">5%</option>
             <option value="0.06">6%</option>
             <option value="0.07">7%</option>
             <option value="0.10">10%</option>
@@ -463,6 +464,14 @@
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
                     <button onclick="payInstallment(${l.id})" style="background:#1a3e72; color:white; font-size:11px;">Post Payment</button>
                     <button onclick="fullPayment(${l.id})" style="background:#28a745; color:white; font-size:11px;">Full Payment</button>
+		   <button onclick="editLoan(${l.id})" style="background:#ffc107; color:black; font-size:11px; margin-top:5px;">
+    <i class="fa-solid fa-pen-to-square"></i> Edit Loan
+</button>
+
+<button onclick="deleteLoan(${l.id})" 
+        style="background:#dc3545; color:white; font-size:11px; margin-top:5px;">
+    Delete Loan
+</button>
                 </div>
             `;
             list.appendChild(card);
@@ -646,6 +655,72 @@
         const url = window.URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
         const a = document.createElement('a'); a.href = url; a.download = 'Report.csv'; a.click();
     }
+
+// ===== SAFE EDIT LOAN FUNCTION =====
+function editLoan(id) {
+    try {
+        const l = loans.find(x => x.id === id);
+        if (!l) return alert("Loan not found.");
+
+        const newName = prompt("Edit Borrower Name:", l.name);
+        if (newName === null) return;
+
+        const newPrincipal = parseFloat(prompt("Edit Remaining Principal:", l.principal));
+        if (isNaN(newPrincipal)) return alert("Invalid principal amount.");
+
+        const newInterest = parseFloat(prompt("Edit Remaining Interest:", l.totalInterest));
+        if (isNaN(newInterest)) return alert("Invalid interest amount.");
+
+        const newDueDate = prompt("Edit Due Date (YYYY-MM-DD):", l.dueDate);
+        if (!newDueDate) return alert("Invalid due date.");
+
+        const newTerm = parseInt(prompt("Edit Term (Months):", l.term));
+        if (isNaN(newTerm)) return alert("Invalid term.");
+
+        const newPaymentType = prompt("Edit Payment Type (monthly / cutoff10 / cutoff15):", l.paymentType);
+        if (!["monthly", "cutoff10", "cutoff15"].includes(newPaymentType)) {
+            return alert("Invalid payment type.");
+        }
+
+        // Apply changes safely
+        l.name = newName;
+        l.principal = newPrincipal;
+        l.totalInterest = newInterest;
+        l.dueDate = newDueDate;
+        l.term = newTerm;
+        l.paymentType = newPaymentType;
+
+        if (typeof savedNames !== "undefined") {
+            savedNames.add(newName);
+            if (typeof updateNameDatalist === "function") {
+                updateNameDatalist();
+            }
+        }
+
+        if (typeof save === "function") save();
+        if (typeof render === "function") render();
+
+        alert("Loan updated successfully!");
+
+    } catch (err) {
+        console.error("Edit error:", err);
+        alert("Something went wrong while editing.");
+    }
+}
+
+// ===== SAFE DELETE LOAN FUNCTION =====
+function deleteLoan(id) {
+    const loan = loans.find(l => l.id === id);
+    if(!loan) return;
+
+    if(confirm(`Are you sure you want to DELETE loan of ${loan.name}?\n₱${formatMoney(loan.principal)} will be returned to bank.`)) {
+        banks.Cash += loan.principal;  // refund principal
+        loans = loans.filter(l => l.id !== id); // remove loan
+        save();
+        render();
+    }
+}
+
 </script>
 </body>
 </html>
